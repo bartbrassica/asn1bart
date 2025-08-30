@@ -2158,6 +2158,20 @@ class TbsCertificate(Sequence):
         ('extensions', Extensions, {'explicit': 3, 'optional': True}),
     ]
 
+    @property
+    def raw_bytes(self):
+        """
+        Returns the raw DER bytes of the TBS certificate, preserving the original
+        encoding when available. This is needed for signature verification when
+        non-string attributes are present in Names.
+        
+        :return:
+            A byte string of the DER-encoded TBS certificate
+        """
+        if self._header is not None:
+            return self._header + self.contents + self._trailer
+        return self.dump()
+
 
 class Certificate(Sequence):
     _fields = [
@@ -2526,6 +2540,18 @@ class Certificate(Sequence):
         """
 
         return self['signature_value'].native
+
+    @property
+    def tbs_certificate_bytes(self):
+        """
+        The raw bytes of the TBS (to-be-signed) certificate portion,
+        preserving original encoding for signature verification.
+
+        :return:
+            A byte string of the DER-encoded TBS certificate
+        """
+        tbs = self['tbs_certificate']
+        return tbs.raw_bytes
 
     @property
     def signature_algo(self):
